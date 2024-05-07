@@ -19,7 +19,6 @@ bool CollisionDetection::configurationTest(float x, float y, float t) const {
   int idx = iY * Constants::positionResolution * Constants::headings + iX * Constants::headings + iT;
   int cX;
   int cY;
-  // std::cout<<"--------------------" <<endl;
   for (int i = 0; i < collisionLookup[idx].length; ++i) {
     cX = (X + collisionLookup[idx].pos[i].x);
     cY = (Y + collisionLookup[idx].pos[i].y);
@@ -30,16 +29,15 @@ bool CollisionDetection::configurationTest(float x, float y, float t) const {
       //   return false;
       // }
             // 检查网格单元的高度
-      int height = grid->data[cY * grid->info.width + cX] + 128;
-
-      std::cout<<"Height ="<< height <<endl;
-   
+      int height = grid->data[cY * grid->info.width + cX];
+      if (height < 0) {
+        height = height +256;
+      }
       if (height > HEIGHT_THRESHOLD) {
-        // std::cout<<"--------------------"<<endl;
         return false;  // 如果超过阈值，判断为不可通行
       }
     }
   }
-  // std::cout<<"--------------------"<<endl;
+
   return true;
 }

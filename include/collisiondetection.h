@@ -52,11 +52,12 @@ class CollisionDetection {
     float t;
     // assign values to the configuration
     getConfiguration(node, x, y, t);
-
-    // 2D collision test
-    if (t == 99) {
-      return !grid->data[node->getIdx()];
-    }
+    // std::cout<<"T = "<<t<<std::endl;
+    // // 2D collision test
+    // if (t == 99) {
+    //   std::cout<<"returning !grid->data[node->getIdx()]"<<!grid->data[node->getIdx()]<<std::endl;
+    //   return !grid->data[node->getIdx()];
+    // }
 
     if (true) {
       cost = configurationTest(x, y, t) ? 0 : 1;
@@ -79,7 +80,10 @@ class CollisionDetection {
         // 这里假设你想要直接转换数据，或进行一些修改
         for (size_t i = 0; i < grid->data.size(); ++i) {
             // 根据你的需要调整数据，比如这里将数据转换为 uint8_t 范围
-            extendedGrid->data[i] = static_cast<uint8_t>(grid->data[i] + 128);
+            if(grid->data[i]<0){
+            extendedGrid->data[i] = static_cast<uint8_t>(grid->data[i] + 256);
+            }
+            extendedGrid->data[i] = 255-(extendedGrid->data[i]);
         }
         return extendedGrid;
     }
