@@ -8,6 +8,7 @@ float aStar(Node2D& start, Node2D& goal, Node2D* nodes2D, int width, int height,
 void updateH(Node3D& start, const Node3D& goal, Node2D* nodes2D, float* dubinsLookup, int width, int height, CollisionDetection& configurationSpace, Visualize& visualization);
 Node3D* dubinsShot(Node3D& start, const Node3D& goal, CollisionDetection& configurationSpace);
 void updateV(Node3D& node,Node3D& nextnNode, CollisionDetection& configurationSpace);
+float updateRoll(Node3D& node, CollisionDetection& configurationSpace);
 
 //###################################################
 //                                    NODE COMPARISON
@@ -234,33 +235,72 @@ void updateV(Node3D& node, Node3D& nextNode, CollisionDetection& configurationSp
     
     // 计算俯仰角和横滚角（假设以水平面为基准）
     float pitch = std::atan(heightDifference / horizontalDistance); // 俯仰角
-    float roll = 0.0; // 假设横滚角为0（即以水平面为基准）
+    float roll = updateRoll(nextNode, configurationSpace); // 假设横滚角为0（即以水平面为基准）
     
     // 将俯仰角和横滚角作为代价值更新节点的V值（假设V值的更新方式为加和）
-    float cost = std::abs(pitch) + std::abs(roll); // 将俯仰角和横滚角绝对值相加作为代价
+    float cost = 40 * std::abs(pitch) + std::abs(roll); // 将俯仰角和横滚角绝对值相加作为代价
 
-    node.setV(cost);
+    nextNode.setV(cost);
     float currentV = nextNode.getV();
     float currentG = nextNode.getG();
     float currentH = nextNode.getH();
 
-    std::cout << "====================" << endl;
-    std::cout << "map.idx = "  << idx << std::endl;
+    // std::cout << "====================" << endl;
+    // std::cout << "map.idx = "  << idx << std::endl;
     // std::cout << "node x = " << currentX <<"  y = " << currentY << std::endl;
     // std::cout << "next x = " << nextX <<"  y = " << nextY << std::endl;
-    std::cout << "height = " << currentHeight << std::endl;
-    std::cout << "nextheight = " << nextHeight << std::endl;
+    // std::cout << "height = " << currentHeight << std::endl;
+    // std::cout << "nextheight = " << nextHeight << std::endl;
     // std::cout << "pitch = " << pitch << std::endl;
     // std::cout << "roll = " << roll << std::endl;
     // std::cout << "cost = " << cost << std::endl;
-    std::cout << "currentG = " << currentG << std::endl;
-    std::cout << "currentH = " << currentH << std::endl;
-    std::cout << "currentV = " << currentV << std::endl;
+    // std::cout << "currentG = " << currentG << std::endl;
+    // std::cout << "currentH = " << currentH << std::endl;
+    // std::cout << "currentV = " << currentV << std::endl;
 
     std::cout << "====================" << endl;
 
 
 }
+
+float updateRoll(Node3D& node, CollisionDetection& configurationSpace) {
+    auto grid = configurationSpace.getExtendedGrid(); // 假设已有方法获取高度信息
+
+    float theta = node.getT(); // 获取车辆的朝向（弧度）
+    float width = grid->info.width;
+    float height = grid->info.height;
+
+    // 左侧和右侧向量（假设朝向是基于正北方向，且角度增加方向为顺时针）
+    float leftX = node.getX() - sin(theta);
+    float leftY = node.getY() + cos(theta);
+    float rightX = node.getX() + sin(theta);
+    float rightY = node.getY() - cos(theta);
+
+    float idx = node.setIdx(width, height);
+    float leftIdx = leftY * width + leftX;
+    float rightIdx = rightY * width + rightX;
+
+    float leftHeight = grid->data[leftIdx];
+    float rightHeight = grid->data[rightIdx];
+    float heightDifference = rightHeight - leftHeight; // 计算高度差
+
+    float horizontalDistance = 2 * grid->info.resolution; // 假设格点间距离为resolution的两倍
+    float roll = atan2(heightDifference, horizontalDistance);
+    std::cout << "====================" << endl;
+    
+    std::cout << "idx = " << idx << std::endl;
+    std::cout << "leftIdx = " << leftIdx << std::endl;
+    std::cout << "rightIdx = " << rightIdx << std::endl;
+    std::cout << "leftHeight = " << leftHeight << std::endl;
+    std::cout << "rightHeight = " << rightHeight << std::endl;
+    std::cout << "heightDifference = " << heightDifference << std::endl;
+    std::cout << "horizontalDistance = " << horizontalDistance << std::endl;
+    std::cout << "roll = " << roll << std::endl;
+    std::cout << "====================" << endl;
+
+    return roll;
+}
+
 
 
 // void updateV(Node3D& node,CollisionDetection& configurationSpace) {
