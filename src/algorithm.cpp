@@ -231,32 +231,36 @@ void updateV(Node3D& node, Node3D& nextNode, CollisionDetection& configurationSp
     int currentHeight = extendedGrid->data[idx];
     int nextIdx = (int)(nextY) * extendedGrid->info.width + (int)(nextX);
     int nextHeight = extendedGrid->data[nextIdx];
-    int heightDifference = nextHeight - currentHeight;
+    float heightDifference = (nextHeight - currentHeight)*(float)30/(float)255;
     
     // 计算俯仰角和横滚角（假设以水平面为基准）
-    float pitch = std::atan(heightDifference / horizontalDistance); // 俯仰角
+    float pitch = std::atan(heightDifference / horizontalDistance) ; // 俯仰角
     float roll = updateRoll(nextNode, configurationSpace); // 假设横滚角为0（即以水平面为基准）
+    nextNode.setP(pitch);
+    nextNode.setR(roll);
     
     // 将俯仰角和横滚角作为代价值更新节点的V值（假设V值的更新方式为加和）
-    float cost = 40 * std::abs(pitch) + std::abs(roll); // 将俯仰角和横滚角绝对值相加作为代价
+    float cost = (std::abs(pitch) + std::abs(roll)) *180 / M_PI; // 将俯仰角和横滚角绝对值相加作为代价
 
     nextNode.setV(cost);
     float currentV = nextNode.getV();
     float currentG = nextNode.getG();
     float currentH = nextNode.getH();
 
-    // std::cout << "====================" << endl;
-    // std::cout << "map.idx = "  << idx << std::endl;
-    // std::cout << "node x = " << currentX <<"  y = " << currentY << std::endl;
-    // std::cout << "next x = " << nextX <<"  y = " << nextY << std::endl;
-    // std::cout << "height = " << currentHeight << std::endl;
-    // std::cout << "nextheight = " << nextHeight << std::endl;
-    // std::cout << "pitch = " << pitch << std::endl;
-    // std::cout << "roll = " << roll << std::endl;
-    // std::cout << "cost = " << cost << std::endl;
-    // std::cout << "currentG = " << currentG << std::endl;
-    // std::cout << "currentH = " << currentH << std::endl;
-    // std::cout << "currentV = " << currentV << std::endl;
+    std::cout << "====================" << endl;
+    std::cout << "map.idx = "  << nextIdx << std::endl;
+    std::cout << "node x = " << currentX <<"  y = " << currentY << std::endl;
+    std::cout << "next x = " << nextX <<"  y = " << nextY << std::endl;
+    std::cout << "height = " << currentHeight << std::endl;
+    std::cout << "nextheight = " << nextHeight << std::endl;
+    std::cout << "heightDifference = " << heightDifference << std::endl;
+    std::cout << "horizontalDistance = " << horizontalDistance << std::endl;
+    std::cout << "pitch = " << pitch << std::endl;
+    std::cout << "roll = " << roll << std::endl;
+    std::cout << "cost = " << cost << std::endl;
+    std::cout << "currentG = " << currentG << std::endl;
+    std::cout << "currentH = " << currentH << std::endl;
+    std::cout << "currentV = " << currentV << std::endl;
 
     std::cout << "====================" << endl;
 
@@ -276,27 +280,30 @@ float updateRoll(Node3D& node, CollisionDetection& configurationSpace) {
     float rightX = node.getX() + sin(theta);
     float rightY = node.getY() - cos(theta);
 
-    float idx = node.setIdx(width, height);
-    float leftIdx = leftY * width + leftX;
-    float rightIdx = rightY * width + rightX;
+    int idx = (int)(node.getY()) * grid->info.width + (int)(node.getX());
+    int leftIdx = (int)(leftY) *  grid->info.width + (int)(leftX);
+    int rightIdx = (int)(rightY) *  grid->info.width + (int)(rightX);
 
     float leftHeight = grid->data[leftIdx];
     float rightHeight = grid->data[rightIdx];
-    float heightDifference = rightHeight - leftHeight; // 计算高度差
+    float heightDifference = (rightHeight - leftHeight)*(float)30/(float)255; // 计算高度差
 
     float horizontalDistance = 2 * grid->info.resolution; // 假设格点间距离为resolution的两倍
-    float roll = atan2(heightDifference, horizontalDistance);
-    std::cout << "====================" << endl;
-    
-    std::cout << "idx = " << idx << std::endl;
-    std::cout << "leftIdx = " << leftIdx << std::endl;
-    std::cout << "rightIdx = " << rightIdx << std::endl;
-    std::cout << "leftHeight = " << leftHeight << std::endl;
-    std::cout << "rightHeight = " << rightHeight << std::endl;
-    std::cout << "heightDifference = " << heightDifference << std::endl;
-    std::cout << "horizontalDistance = " << horizontalDistance << std::endl;
-    std::cout << "roll = " << roll << std::endl;
-    std::cout << "====================" << endl;
+    float roll = std::atan(heightDifference/ horizontalDistance) ; // 计算横滚角
+    // std::cout << "====================" << endl;
+
+    // std::cout << "idx = " << idx << std::endl;
+    // std::cout << "node.x = " << node.getX() << "  node.y = " << node.getY() << std::endl;
+    // std::cout << "left.x = " << leftX << "  left.y = " << leftY << std::endl;
+    // std::cout << "right.x = " << rightX << "  right.y = " << rightY << std::endl;
+    // std::cout << "leftIdx = " << leftIdx << std::endl;
+    // std::cout << "rightIdx = " << rightIdx << std::endl;
+    // std::cout << "leftHeight = " << leftHeight << std::endl;
+    // std::cout << "rightHeight = " << rightHeight << std::endl;
+    // std::cout << "heightDifference = " << heightDifference << std::endl;
+    // std::cout << "horizontalDistance = " << horizontalDistance << std::endl;
+    // std::cout << "roll = " << roll << std::endl;
+    // std::cout << "====================" << endl;
 
     return roll;
 }
@@ -407,17 +414,12 @@ float aStar(Node2D& start,
           // ensure successor is on grid ROW MAJOR
           // ensure successor is not blocked by obstacle
           // ensure successor is not on closed list
-          std::cout<<"######################"<<endl;
-          std::cout<<"isOnGrid ="<<nSucc->isOnGrid(width, height)<<endl;
-          std::cout<<"isTraversable ="<<configurationSpace.isTraversable(nSucc)<<endl;
-          std::cout<<"isClosed ="<< !nodes2D[iSucc].isClosed()<<endl;
+
 
           if (nSucc->isOnGrid(width, height) &&  configurationSpace.isTraversable(nSucc) && !nodes2D[iSucc].isClosed()) {
             // calculate new G value
             nSucc->updateG();
             newG = nSucc->getG();
-            std::cout<<"oldG ="<<nodes2D[iSucc].getG()<<endl;
-            std::cout<<"newG ="<<newG<<endl;
 
             // if successor not on open list or g value lower than before put it on open list
             if (!nodes2D[iSucc].isOpen() || newG < nodes2D[iSucc].getG()) {
@@ -428,14 +430,13 @@ float aStar(Node2D& start,
               nodes2D[iSucc] = *nSucc;
               O.push(&nodes2D[iSucc]);
               delete nSucc;
-              std::cout<<"######################"<<endl;
             } else { delete nSucc; }
           } else { delete nSucc; }
         }
       }
     }
   }
-  std::cout<<"######################"<<endl;
+
   // return large number to guide search away
   return 1000;
 }

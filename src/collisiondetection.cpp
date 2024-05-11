@@ -8,7 +8,7 @@ CollisionDetection::CollisionDetection() {
 }
 
 bool CollisionDetection::configurationTest(float x, float y, float t) const {
-  const int HEIGHT_THRESHOLD = 255;  // 假设99是不可通行的高度阈值
+  const int HEIGHT_THRESHOLD = 0;  // 假设99是不可通行的高度阈值
   int X = (int)x;
   int Y = (int)y;
   int iX = (int)((x - (long)x) * Constants::positionResolution);
@@ -33,7 +33,8 @@ bool CollisionDetection::configurationTest(float x, float y, float t) const {
       if (height < 0) {
         height = height +256;
       }
-      if (height > HEIGHT_THRESHOLD) {
+      // std::cout<<"height = "<<height<<std::endl;
+      if (height <= HEIGHT_THRESHOLD) {
         return false;  // 如果超过阈值，判断为不可通行
       }
     }

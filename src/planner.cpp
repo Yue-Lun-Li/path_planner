@@ -16,6 +16,7 @@ Planner::Planner() {
   // TOPICS TO PUBLISH
   pubStart = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/start", 1);
   lane_pub_ = n.advertise<autoware_msgs::LaneArray>("/based/lane_waypoints_raw", 10, true);
+  details_pub_ = n.advertise<hybrid_astar::PathDetails>("/path_details", 10);
 
   // ___________________
   // TOPICS TO SUBSCRIBE
@@ -468,7 +469,7 @@ void Planner::plan() {
     float t = tf::getYaw(start.pose.orientation);
     // set theta to a value (0,2PI]
     t = Helper::normalizeHeadingRad(t);
-    Node3D nStart(x, y, t, 0, 0, 0, nullptr);
+    Node3D nStart(x, y, t, 0, 0, 0,0,0, nullptr);
     std::cout << "start: " << x << ", " << y << ", "<< t << std::endl;
     // ___________
     // DEBUG START
@@ -481,7 +482,7 @@ void Planner::plan() {
     t = tf::getYaw(goal.pose.orientation);
     // set theta to a value (0,2PI]
     t = Helper::normalizeHeadingRad(t);
-    const Node3D nGoal(x, y, t, 0, 0, 0, nullptr);
+    const Node3D nGoal(x, y, t, 0, 0, 0,0,0, nullptr);
     std::cout << "goal: " << x << ", " << y << ", "<< t << std::endl;
     // __________
     // DEBUG GOAL
@@ -504,12 +505,13 @@ void Planner::plan() {
     // TRACE THE PATH
     smoother.tracePath(nSolution);
     smoother.smoothPath(voronoiDiagram);
+    
     // // CREATE THE UPDATED PATH
     // path.updatePath(smoother.getPath());
 
     // CREATE THE UPDATED PATH 
     std::vector<Node3D> nodes = smoother.getPath();
-
+    Planner::publishPathDetails(nodes);
     // UPDATE VISTED COST AND REMAP XY TO REAL_WORLD 
     int tmp = -1;
     for (size_t i = 0; i < nodes.size(); i++){
@@ -547,6 +549,25 @@ void Planner::plan() {
   }
 }
 
+//###################################################
+//                                      GREY
+//###################################################
+void Planner::publishPathDetails(const std::vector<Node3D>& path) {
+    hybrid_astar::PathDetails msg;
+
+    for (const Node3D& node : path) {
+        msg.pitch.push_back(node.getP());
+        msg.roll.push_back(node.getR());
+        // 假设高度信息可以从节点获取或通过其他方式计算
+        int height = grid->data[(int)(node.getY()) * grid->info.width + (int)(node.getX())];
+        if (height < 0) {
+          height = height +256;
+        }
+        msg.height.push_back(255-height);  // 示例，需要根据实际情况调整
+    }
+
+    details_pub_.publish(msg);  // 确保details_pub_已经在构造函数中初始化
+}
 
     
 void Planner::createWayPoint(std::vector<Node3D>& paths){

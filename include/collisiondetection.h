@@ -83,6 +83,9 @@ class CollisionDetection {
             if(grid->data[i]<0){
             extendedGrid->data[i] = static_cast<uint8_t>(grid->data[i] + 256);
             }
+            else{
+            extendedGrid->data[i] = static_cast<uint8_t>(grid->data[i]);
+            }
             extendedGrid->data[i] = 255-(extendedGrid->data[i]);
         }
         return extendedGrid;

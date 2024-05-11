@@ -18,6 +18,7 @@
 #include <autoware_msgs/Waypoint.h>
 #include <autoware_msgs/Lane.h>
 #include <Eigen/Dense>
+#include <hybrid_astar/PathDetails.h>
 
 #include "constants.h"
 #include "helper.h"
@@ -95,6 +96,8 @@ class Planner {
   */
   void createWayPoint(std::vector<Node3D>& paths);
   
+  void publishPathDetails(const std::vector<Node3D>& path);
+  
   /*! 
      \brief To publish the final set of waypoints.
   */
@@ -123,7 +126,8 @@ class Planner {
   /// A transform for moving start positions
   tf::StampedTransform transform;
   // A publisher publishing the path for waypoint
-  ros::Publisher lane_pub_;         
+  ros::Publisher lane_pub_;  
+  ros::Publisher details_pub_;
   /// The path produced by the hybrid A* algorithm
   Path path;
   /// The smoother used for optimizing the path

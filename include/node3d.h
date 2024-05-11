@@ -15,15 +15,17 @@ class Node3D {
  public:
 
   /// The default constructor for 3D array initialization
-  Node3D(): Node3D(0, 0, 0, 0, 0, 0, nullptr) {}
+  Node3D(): Node3D(0, 0, 0, 0, 0, 0,0,0, nullptr) {}
   /// Constructor for a node with the given arguments
-  Node3D(float x, float y, float t, float g, float h,float v, const Node3D* pred, int prim = 0) {
+  Node3D(float x, float y, float t, float g, float h,float v,float p ,float r, const Node3D* pred, int prim = 0) {
     this->x = x;
     this->y = y;
     this->t = t;
     this->g = g;
     this->h = h;
     this->v = v;
+    this->p = p;
+    this->r = r;
     this->pred = pred;
     this->o = false;
     this->c = false;
@@ -44,6 +46,10 @@ class Node3D {
   float getH() const { return h; }
   /// get the visited path cost
   float getV() const { return v; }
+  /// get the pitch
+  float getP() const { return p; }
+  /// get the roll
+  float getR() const { return r; }
   /// get the total estimated cost  
   float getC() const { return g + h + v; }
   /// get the index of the node in the 3D array
@@ -70,6 +76,8 @@ class Node3D {
   void setH(const float& h) { this->h = h; }
   /// set and get the index of the node in the 3D grid
   void setV(const float& v) { this->v = v; }
+  void setP(const float& p) { this->p = p; }
+  void setR(const float& r) { this->r = r; }
   /// set and get the index of the node in the 3D grid
   int setIdx(int width, int height) { this->idx = (int)(t / Constants::deltaHeadingRad) * width * height + (int)(y) * width + (int)(x); return idx;}
   /// open the node
@@ -123,6 +131,10 @@ class Node3D {
   float h;
   /// the cost-visted
   float v;
+  /// the pitch
+  float p;
+  /// the roll
+  float r;
   /// the index of the node in the 3D array
   int idx;
   /// the open value
