@@ -1,0 +1,1 @@
+rosbag record -b 24576 -O grid_map.bag /path_details

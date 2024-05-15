@@ -57,12 +57,12 @@ void Visualize::publishNode3DPose(Node3D& node) {
 }
 
 //###################################################
-//                              ALL EXPANDED 3D NODES
+//                              ALL EXPANDED 3D NODES GREY
 //###################################################
 void Visualize::publishNode3DPoses(Node3D& node) {
   geometry_msgs::Pose pose;
-  pose.position.x = 94259+node.getX() * Constants::cellSize;
-  pose.position.y = 209038+node.getY() * Constants::cellSize;
+  pose.position.x = 94264+node.getX() * Constants::cellSize;
+  pose.position.y = 209070+node.getY() * Constants::cellSize;
 
   //FORWARD
   if (node.getPrim() < 3) {
