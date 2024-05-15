@@ -1,5 +1,7 @@
 # PathDetails.msg
-float32[] pitch
-float32[] roll
-float32[] height
+float32 pitch
+float32 roll
+float32 height
+float32 xx
+float32 yy
 

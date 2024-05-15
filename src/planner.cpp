@@ -16,7 +16,7 @@ Planner::Planner() {
   // TOPICS TO PUBLISH
   pubStart = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/start", 1);
   lane_pub_ = n.advertise<autoware_msgs::LaneArray>("/based/lane_waypoints_raw", 10, true);
-  details_pub_ = n.advertise<hybrid_astar::PathDetails>("/path_details", 10);
+  details_pub_ = n.advertise<hybrid_astar::PathDetails>("/path_details", 1000, true);
 
   // ___________________
   // TOPICS TO SUBSCRIBE
@@ -470,11 +470,11 @@ void Planner::plan() {
     // set theta to a value (0,2PI]
     t = Helper::normalizeHeadingRad(t);
     Node3D nStart(x, y, t, 0, 0, 0,0,0, nullptr);
+
+    // DEBUG START GREY
+    // Node3D nStart(52.1406, 99.5313, t, 0, 0, 0,0,0, nullptr);
     std::cout << "start: " << x << ", " << y << ", "<< t << std::endl;
     // ___________
-    // DEBUG START
-    //    Node3D nStart(108.291, 30.1081, 0, 0, 0, nullptr);  
-
     // ________________________
     // retrieving goal position
     x = (goal.pose.position.x-origin_x) / Constants::cellSize;
@@ -483,10 +483,11 @@ void Planner::plan() {
     // set theta to a value (0,2PI]
     t = Helper::normalizeHeadingRad(t);
     const Node3D nGoal(x, y, t, 0, 0, 0,0,0, nullptr);
+    // DEBUG GOAL GREY
+    // const Node3D nGoal(114.1304, 161.3496, t, 0, 0, 0,0,0, nullptr);
     std::cout << "goal: " << x << ", " << y << ", "<< t << std::endl;
     // __________
-    // DEBUG GOAL
-    //    const Node3D nGoal(155.349, 36.1969, 0.7615936, 0, 0, nullptr);
+    
 
 
     // ___________________________
@@ -556,17 +557,21 @@ void Planner::publishPathDetails(const std::vector<Node3D>& path) {
     hybrid_astar::PathDetails msg;
 
     for (const Node3D& node : path) {
-        msg.pitch.push_back(node.getP());
-        msg.roll.push_back(node.getR());
+        msg.pitch = node.getP();
+        msg.roll = node.getR();
+        msg.xx = node.getX();
+        msg.yy = node.getY();
         // 假设高度信息可以从节点获取或通过其他方式计算
         int height = grid->data[(int)(node.getY()) * grid->info.width + (int)(node.getX())];
         if (height < 0) {
           height = height +256;
         }
-        msg.height.push_back(255-height);  // 示例，需要根据实际情况调整
+        msg.height = (255-height);  // 示例，需要根据实际情况调整
+        details_pub_.publish(msg);  // 确保details_pub_已经在构造函数中初始化
+        ros::Duration(0.1).sleep();
     }
 
-    details_pub_.publish(msg);  // 确保details_pub_已经在构造函数中初始化
+    
 }
 
     
