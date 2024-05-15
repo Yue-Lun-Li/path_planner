@@ -7,7 +7,7 @@ using namespace HybridAStar;
 float aStar(Node2D& start, Node2D& goal, Node2D* nodes2D, int width, int height, CollisionDetection& configurationSpace, Visualize& visualization);
 void updateH(Node3D& start, const Node3D& goal, Node2D* nodes2D, float* dubinsLookup, int width, int height, CollisionDetection& configurationSpace, Visualize& visualization);
 Node3D* dubinsShot(Node3D& start, const Node3D& goal, CollisionDetection& configurationSpace);
-void updateV(Node3D& node,Node3D& nextnNode, CollisionDetection& configurationSpace);
+void updateV(Node3D& node,Node3D& nextnNode, Node3D& start, const Node3D& goal, CollisionDetection& configurationSpace);
 float updateRoll(Node3D& node, CollisionDetection& configurationSpace);
 
 //###################################################
@@ -157,7 +157,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
                 updateH(*nSucc, goal, nodes2D, dubinsLookup, width, height, configurationSpace, visualization);
                 //update v value
               
-                updateV(*nPred,*nSucc, configurationSpace);
+                updateV(*nPred,*nSucc,start,goal, configurationSpace);
 
                 // if the successor is in the same cell but the C value is larger
                 if (iPred == iSucc && nSucc->getC() > nPred->getC() + Constants::tieBreaker) {
@@ -203,7 +203,7 @@ Node3D* Algorithm::hybridAStar(Node3D& start,
 //###################################################
 //                                         GREY
 //###################################################
-void updateV(Node3D& node, Node3D& nextNode, CollisionDetection& configurationSpace) {  
+void updateV(Node3D& node, Node3D& nextNode,Node3D& start,const Node3D& goal, CollisionDetection& configurationSpace) {  
     auto extendedGrid = configurationSpace.convertToExtendedGrid();
     if (!extendedGrid) {
         std::cerr << "Failed to get extended grid" << std::endl;
@@ -231,16 +231,29 @@ void updateV(Node3D& node, Node3D& nextNode, CollisionDetection& configurationSp
     int currentHeight = extendedGrid->data[idx];
     int nextIdx = (int)(nextY) * extendedGrid->info.width + (int)(nextX);
     int nextHeight = extendedGrid->data[nextIdx];
-    float heightDifference = (nextHeight - currentHeight)*(float)30/(float)255;
+    float heightDifference = (nextHeight - currentHeight)*(float)5.2209/(float)255;
     
     // 计算俯仰角和横滚角（假设以水平面为基准）
-    float pitch = std::atan(heightDifference / horizontalDistance) ; // 俯仰角
-    float roll = updateRoll(nextNode, configurationSpace); // 假设横滚角为0（即以水平面为基准）
-    nextNode.setP(pitch);
-    nextNode.setR(roll);
+    float nextNodepitch = std::atan(heightDifference / horizontalDistance) ; // 俯仰角
+    float nextNoderoll = updateRoll(nextNode, configurationSpace); // 假设横滚角为0（即以水平面为基准）
+    nextNode.setP(nextNodepitch);
+    nextNode.setR(nextNoderoll);
+
+    float nodepitch = node.getP();
+    float noderoll = node.getR();
     
+    float dpitch = nextNodepitch - nodepitch;
+    float droll = nextNoderoll - noderoll;
+
+
+    float distanceToGoal = std::sqrt(std::pow(goal.getX() - nextX, 2) + std::pow(goal.getY() - nextY, 2)) ;
+    float distanceForAll = std::sqrt(std::pow(goal.getX() - start.getX(), 2) + std::pow(goal.getY() - start.getY(), 2)) ;
+    float normalizedDistance = distanceToGoal / distanceForAll; // 假设width是地图的宽度
+
+  
+
     // 将俯仰角和横滚角作为代价值更新节点的V值（假设V值的更新方式为加和）
-    float cost = (std::abs(pitch) + std::abs(roll)) *180 / M_PI; // 将俯仰角和横滚角绝对值相加作为代价
+    float cost =4 *normalizedDistance * (std::abs(dpitch) + std::abs(droll)) *180 / M_PI; // 将俯仰角和横滚角绝对值相加作为代价
 
     nextNode.setV(cost);
     float currentV = nextNode.getV();
@@ -255,8 +268,9 @@ void updateV(Node3D& node, Node3D& nextNode, CollisionDetection& configurationSp
     std::cout << "nextheight = " << nextHeight << std::endl;
     std::cout << "heightDifference = " << heightDifference << std::endl;
     std::cout << "horizontalDistance = " << horizontalDistance << std::endl;
-    std::cout << "pitch = " << pitch << std::endl;
-    std::cout << "roll = " << roll << std::endl;
+    std::cout << "dpitch = " << dpitch << std::endl;
+    std::cout << "droll = " << droll << std::endl;
+    std::cout << "normalizedDistance = " << normalizedDistance << std::endl;
     std::cout << "cost = " << cost << std::endl;
     std::cout << "currentG = " << currentG << std::endl;
     std::cout << "currentH = " << currentH << std::endl;
@@ -286,7 +300,7 @@ float updateRoll(Node3D& node, CollisionDetection& configurationSpace) {
 
     float leftHeight = grid->data[leftIdx];
     float rightHeight = grid->data[rightIdx];
-    float heightDifference = (rightHeight - leftHeight)*(float)30/(float)255; // 计算高度差
+    float heightDifference = (rightHeight - leftHeight)*(float)5.2209/(float)255; // 计算高度差
 
     float horizontalDistance = 2 * grid->info.resolution; // 假设格点间距离为resolution的两倍
     float roll = std::atan(heightDifference/ horizontalDistance) ; // 计算横滚角
